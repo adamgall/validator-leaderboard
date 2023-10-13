@@ -7,7 +7,6 @@
     "build": "rimraf ./build && tsc",
     "start": "npm run build && node build/index.js",
     "start:dev": "SKIP_MIGRATIONS=true npx nodemon src/index.ts",
-    "start:debug": "SKIP_MIGRATIONS=true npx nodemon --inspect src/index.ts",
     "migration": "node-pg-migrate create -j ts -m src/migrations",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
