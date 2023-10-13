@@ -1,0 +1,30 @@
+{
+  "name": "validator-leaderboard",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "rimraf ./build && tsc",
+    "start": "npm run build && node build/index.js",
+    "start:dev": "SKIP_MIGRATIONS=true npx nodemon src/index.ts",
+    "start:debug": "SKIP_MIGRATIONS=true npx nodemon --inspect src/index.ts",
+    "migration": "node-pg-migrate create -j ts -m src/migrations",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.8.2",
+    "@types/pg": "^8.10.3",
+    "nodemon": "^3.0.1",
+    "rimraf": "^5.0.5",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "node-pg-migrate": "^6.2.2",
+    "pg": "^8.11.3"
+  }
+}
