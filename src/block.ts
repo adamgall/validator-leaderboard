@@ -77,10 +77,10 @@ const fetchFromAPI = async (slotNumber: number): Promise<IBlock | null> => {
   const httphttpsrequest = (
     options: http.RequestOptions,
     callback?: ((res: http.IncomingMessage) => void) | undefined): http.ClientRequest => {
-    if (options.protocol === "http") {
-      return http.request(options, callback);
+    if (options.protocol === "https:") {
+      return https.request(options, callback);
     } else {
-      return https.request(options, callback)
+      return http.request(options, callback)
     }
   }
 
