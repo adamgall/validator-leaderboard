@@ -36,10 +36,10 @@ async function start(client: Client) {
       if (validator === null) {
         await createBlock(client, currentSlotNumber);
         currentSlotNumber = currentSlotNumber + 1;
-        continue;
       } else {
         currentValidatorIndex = currentValidatorIndex + 1;
       }
+      await new Promise(resolve => setTimeout(resolve, parseInt(process.env.ENV_LOOP_TIMEOUT || "0")));
     } else {
       console.log('waiting for a block to pass');
       await new Promise(resolve => setTimeout(resolve, LOOP_RATE));
