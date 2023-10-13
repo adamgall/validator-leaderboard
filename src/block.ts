@@ -75,19 +75,21 @@ const fetchFromAPI = async (slotNumber: number): Promise<IBlock | null> => {
     },
   };
 
-  const httphttpsrequest = (
-    options: http.RequestOptions,
-    callback?: ((res: http.IncomingMessage) => void) | undefined): http.ClientRequest => {
-    if (options.protocol === "https:") {
-      return https.request(options, callback);
-    } else {
-      return http.request(options, callback)
+  const httphttps = {
+    request: (
+      options: http.RequestOptions,
+      callback?: ((res: http.IncomingMessage) => void) | undefined): http.ClientRequest => {
+      if (options.protocol === "https:") {
+        return https.request(options, callback);
+      } else {
+        return http.request(options, callback)
+      }
     }
   }
 
   return new Promise<IBlock | null>((resolve, reject) => {
     let data = '';
-    const request = httphttpsrequest(options, response => {
+    const request = httphttps.request(options, response => {
       // Set the encoding, so we don't get log to the console a bunch of gibberish binary data
       response.setEncoding('utf8');
 
