@@ -97,16 +97,14 @@ const fetchFromAPI = async (index: number, atSlot: number): Promise<IValidator |
       // Set the encoding, so we don't get log to the console a bunch of gibberish binary data
       response.setEncoding('utf8');
 
-      if (response.statusCode && response.statusCode === 404) {
-        console.log(`Validator ${index} at slot ${atSlot} not found`);
-        return resolve(null);
-      }
-
-      // Check the status code of the response
-      if (response.statusCode && (response.statusCode < 200 || response.statusCode > 299)) {
-        // Reject or resolve with null based on your use-case. Here we're rejecting.
-        console.log(`Failed to fetch validator ${index} from CL at slot ${atSlot}, status code: ${response.statusCode}`)
-        return reject();
+      if (response.statusCode) {
+        if (response.statusCode === 404) {
+          console.log(`Validator ${index} at slot ${atSlot} not found`);
+          resolve(null);
+        } else if (response.statusCode < 200 || response.statusCode > 299) {
+          console.log(`Failed to fetch validator ${index} from CL at slot ${atSlot}, status code: ${response.statusCode}`)
+          reject();
+        }
       }
 
       // As data starts streaming in, add each chunk to "data"
