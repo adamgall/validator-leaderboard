@@ -64,8 +64,8 @@ const saveToDatabase = async (client: Client, block: IBlock): Promise<void> => {
 
 const fetchFromAPI = async (slotNumber: number): Promise<IBlock | null> => {
   const options = {
-    protocol: 'https:',
-    hostname: 'cl.rpc.eth.gall.pro',
+    protocol: process.env.CL_PROTOCOL,
+    hostname: process.env.CL_HOSTNAME,
     path: `/eth/v2/beacon/blocks/${slotNumber}`,
     method: 'GET',
     headers: {

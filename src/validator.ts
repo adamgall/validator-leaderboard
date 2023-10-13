@@ -67,8 +67,8 @@ const saveToDatabase = async (client: Client, validator: IValidator): Promise<vo
 
 const fetchFromAPI = async (index: number, atSlot: number): Promise<IValidator | null> => {
   const options = {
-    protocol: 'https:',
-    hostname: 'cl.rpc.eth.gall.pro',
+    protocol: process.env.CL_PROTOCOL,
+    hostname: process.env.CL_HOSTNAME,
     path: `/eth/v1/beacon/states/${atSlot}/validators/${index}`,
     method: 'GET',
     headers: {
