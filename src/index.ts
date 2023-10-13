@@ -32,13 +32,18 @@ async function start(client: Client) {
 
     if (latestBlockTime === null || latestBlockTime < threshold - BLOCK_TIME) {
       console.log(`validator ${currentValidatorIndex}, slotNumber ${currentSlotNumber}`);
-      let validator = await createValidator(client, currentValidatorIndex, currentSlotNumber);
-      if (validator === null) {
-        await createBlock(client, currentSlotNumber);
-        currentSlotNumber = currentSlotNumber + 1;
-      } else {
-        currentValidatorIndex = currentValidatorIndex + 1;
-      }
+
+      await createValidator(client, currentValidatorIndex, currentSlotNumber).then(async validator => {
+        if (validator === null) {
+          await createBlock(client, currentSlotNumber);
+          currentSlotNumber = currentSlotNumber + 1;
+        } else {
+          currentValidatorIndex = currentValidatorIndex + 1;
+        }
+      }).catch(async error => {
+        console.error(error.message);
+        await new Promise(resolve => setTimeout(resolve, parseInt(process.env.ENV_LOOP_TIMEOUT || "0")));
+      });
       await new Promise(resolve => setTimeout(resolve, parseInt(process.env.ENV_LOOP_TIMEOUT || "0")));
     } else {
       console.log('waiting for a block to pass');

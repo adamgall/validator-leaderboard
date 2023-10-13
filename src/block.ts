@@ -100,7 +100,7 @@ const fetchFromAPI = async (slotNumber: number): Promise<IBlock | null> => {
             timestamp: slotToTimestamp(slotNumber),
           });
         } else if (response.statusCode < 200 || response.statusCode > 299) {
-          console.log(`Failed to fetch block ${slotNumber} from CL, status code: ${response.statusCode}`)
+          console.error(`Failed to fetch block ${slotNumber} from CL, status code: ${response.statusCode}`)
           return reject();
         }
       }
