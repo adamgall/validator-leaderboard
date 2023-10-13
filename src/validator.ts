@@ -70,6 +70,7 @@ const fetchFromAPI = async (index: number, atSlot: number): Promise<IValidator |
   const options = {
     protocol: process.env.CL_PROTOCOL,
     hostname: process.env.CL_HOSTNAME,
+    port: process.env.CL_PORT,
     path: `/eth/v1/beacon/states/${atSlot}/validators/${index}`,
     method: 'GET',
     headers: {

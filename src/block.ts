@@ -67,6 +67,7 @@ const fetchFromAPI = async (slotNumber: number): Promise<IBlock | null> => {
   const options = {
     protocol: process.env.CL_PROTOCOL,
     hostname: process.env.CL_HOSTNAME,
+    port: process.env.CL_PORT,
     path: `/eth/v2/beacon/blocks/${slotNumber}`,
     method: 'GET',
     headers: {
