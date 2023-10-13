@@ -91,10 +91,7 @@ const fetchFromAPI = async (index: number, atSlot: number): Promise<IValidator |
   }
 
   return new Promise<IValidator | null>((resolve, reject) => {
-    let data = '';
     const request = httphttps.request(options, response => {
-      // const request = http.request(options, response => {
-      // Set the encoding, so we don't get log to the console a bunch of gibberish binary data
       response.setEncoding('utf8');
 
       if (response.statusCode) {
@@ -105,14 +102,15 @@ const fetchFromAPI = async (index: number, atSlot: number): Promise<IValidator |
           console.log(`Failed to fetch validator ${index} from CL at slot ${atSlot}, status code: ${response.statusCode}`)
           reject();
         }
+        return;
       }
 
-      // As data starts streaming in, add each chunk to "data"
+      let data = '';
+
       response.on('data', (chunk) => {
         data += chunk;
       });
 
-      // The whole response has been received. Print out the result.
       response.on('end', () => {
         const jsonData = JSON.parse(data);
         resolve({
@@ -125,13 +123,11 @@ const fetchFromAPI = async (index: number, atSlot: number): Promise<IValidator |
       });
     });
 
-    // Log errors if any occur
     request.on('error', (error) => {
       console.error(error);
       reject();
     });
 
-    // End the request
     request.end();
   });
 }
