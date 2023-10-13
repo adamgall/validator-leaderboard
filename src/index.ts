@@ -42,7 +42,7 @@ async function start(client: Client) {
         }
       }).catch(async error => {
         console.error(error.message);
-        await new Promise(resolve => setTimeout(resolve, parseInt(process.env.ENV_LOOP_TIMEOUT || "0")));
+        await new Promise(resolve => setTimeout(resolve, parseInt(process.env.ENV_ERROR_DELAY || "0")));
       });
       await new Promise(resolve => setTimeout(resolve, parseInt(process.env.ENV_LOOP_TIMEOUT || "0")));
     } else {
