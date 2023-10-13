@@ -94,16 +94,15 @@ const fetchFromAPI = async (slotNumber: number): Promise<IBlock | null> => {
       if (response.statusCode) {
         if (response.statusCode === 404) {
           console.log(`Block ${slotNumber} missed`);
-          resolve({
+          return resolve({
             slot: slotNumber,
             proposerIndex: 0,
             timestamp: slotToTimestamp(slotNumber),
           });
         } else if (response.statusCode < 200 || response.statusCode > 299) {
           console.log(`Failed to fetch block ${slotNumber} from CL, status code: ${response.statusCode}`)
-          reject();
+          return reject();
         }
-        return;
       }
 
       let data = '';

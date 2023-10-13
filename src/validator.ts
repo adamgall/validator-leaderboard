@@ -97,12 +97,11 @@ const fetchFromAPI = async (index: number, atSlot: number): Promise<IValidator |
       if (response.statusCode) {
         if (response.statusCode === 404) {
           console.log(`Validator ${index} at slot ${atSlot} not found`);
-          resolve(null);
+          return resolve(null);
         } else if (response.statusCode < 200 || response.statusCode > 299) {
           console.log(`Failed to fetch validator ${index} from CL at slot ${atSlot}, status code: ${response.statusCode}`)
-          reject();
+          return reject();
         }
-        return;
       }
 
       let data = '';
