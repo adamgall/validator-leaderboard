@@ -31,7 +31,7 @@ async function start(client: Client) {
     const latestBlockTime = await getMaxTimestamp(client)
 
     if (latestBlockTime === null || latestBlockTime < threshold - BLOCK_TIME) {
-      console.log(`validator ${currentValidatorIndex}, slotNumber ${currentSlotNumber}`);
+      console.log(`Validator ${currentValidatorIndex} at slot ${currentSlotNumber}.`);
 
       await createValidator(client, currentValidatorIndex, currentSlotNumber).then(async validator => {
         if (validator === null) {
