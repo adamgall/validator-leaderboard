@@ -41,7 +41,7 @@ async function start(client: Client) {
           currentValidatorIndex = currentValidatorIndex + 1;
         }
       }).catch(async error => {
-        console.error(error.message);
+        console.error(error);
         await new Promise(resolve => setTimeout(resolve, parseInt(process.env.ENV_ERROR_DELAY || "0")));
       });
       await new Promise(resolve => setTimeout(resolve, parseInt(process.env.ENV_LOOP_TIMEOUT || "0")));
