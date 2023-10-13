@@ -76,6 +76,7 @@ const fetchFromAPI = async (index: number, atSlot: number): Promise<IValidator |
     headers: {
       'accept': 'application/json',
     },
+    agent: false,
   };
 
   const httphttps = {

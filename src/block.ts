@@ -73,6 +73,7 @@ const fetchFromAPI = async (slotNumber: number): Promise<IBlock | null> => {
     headers: {
       'accept': 'application/json',
     },
+    agent: false,
   };
 
   const httphttps = {
