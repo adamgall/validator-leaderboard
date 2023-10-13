@@ -1,4 +1,5 @@
 import { Client } from "pg";
+import http from 'http';
 import https from 'https';
 
 export interface IValidator {
@@ -76,9 +77,20 @@ const fetchFromAPI = async (index: number, atSlot: number): Promise<IValidator |
     },
   };
 
+  const httphttpsrequest = (
+    options: http.RequestOptions,
+    callback?: ((res: http.IncomingMessage) => void) | undefined): http.ClientRequest => {
+    if (options.protocol === "http") {
+      return http.request(options, callback);
+    } else {
+      return https.request(options, callback)
+    }
+  }
+
   return new Promise<IValidator | null>((resolve, reject) => {
     let data = '';
-    const request = https.request(options, response => {
+    const request = httphttpsrequest(options, response => {
+    // const request = http.request(options, response => {
       // Set the encoding, so we don't get log to the console a bunch of gibberish binary data
       response.setEncoding('utf8');
 

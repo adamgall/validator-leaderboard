@@ -1,4 +1,5 @@
 import { Client } from 'pg';
+import http from 'http';
 import https from 'https';
 
 interface IBlock {
@@ -73,9 +74,19 @@ const fetchFromAPI = async (slotNumber: number): Promise<IBlock | null> => {
     },
   };
 
+  const httphttpsrequest = (
+    options: http.RequestOptions,
+    callback?: ((res: http.IncomingMessage) => void) | undefined): http.ClientRequest => {
+    if (options.protocol === "http") {
+      return http.request(options, callback);
+    } else {
+      return https.request(options, callback)
+    }
+  }
+
   return new Promise<IBlock | null>((resolve, reject) => {
     let data = '';
-    const request = https.request(options, response => {
+    const request = httphttpsrequest(options, response => {
       // Set the encoding, so we don't get log to the console a bunch of gibberish binary data
       response.setEncoding('utf8');
 
