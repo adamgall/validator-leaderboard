@@ -127,6 +127,7 @@ const fetchFromAPI = async (index: number, atSlot: number): Promise<IValidator |
     });
 
     // End the request
+    console.log(`ending fetch of ${index}`)
     request.end();
   });
 }
