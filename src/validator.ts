@@ -1,6 +1,5 @@
 import { Client } from "pg";
-import http from 'http';
-import https from 'https';
+import { getFromAPI } from "./cl-api";
 
 export interface IValidator {
   index: number;
@@ -26,7 +25,7 @@ const createValidator = async (client: Client, index: number, atSlot: number): P
   if (dbValidator) {
     validator = hydrateValidator(dbValidator);
   } else {
-    validator = await fetchFromAPI(index, atSlot);
+    validator = await getValidatorAtSlot(index, atSlot);
 
     if (validator) {
       await saveToDatabase(client, validator);
@@ -58,77 +57,34 @@ const loadFromDatabase = async (client: Client, index: number): Promise<IDBValid
   }
 }
 
+const jsonDataMapper = (atSlot: number) => (jsonData: any): IValidator | null => {
+  if (jsonData === null) {
+    return null;
+  }
+
+  const validator: IValidator = {
+    index: jsonData.data.index,
+    publicKey: jsonData.data.validator.pubkey,
+    activationEpoch: jsonData.data.validator.activation_epoch === "18446744073709551615" ? 0 : jsonData.data.validator.activation_epoch,
+    exitEpoch: jsonData.data.validator.exit_epoch === "18446744073709551615" ? null : jsonData.data.validator.exit_epoch,
+    atSlot: atSlot,
+  }
+
+  return validator;
+}
+
+const getValidatorAtSlot = async (index: number, atSlot: number): Promise<IValidator | null> => {
+  const path = `/eth/v1/beacon/states/${atSlot}/validators/${index}`;
+  const [validator] = await getFromAPI<IValidator>(path, jsonDataMapper(atSlot));
+  return validator;
+}
+
 const saveToDatabase = async (client: Client, validator: IValidator): Promise<void> => {
   try {
     await client.query('INSERT INTO validators(public_key, index, activation_epoch, exit_epoch, at_slot) VALUES($1, $2, $3, $4, $5)', [validator.publicKey, validator.index, validator.activationEpoch, validator.exitEpoch, validator.atSlot]);
   } catch (err) {
     console.error('Error saving to the database:', err);
   }
-}
-
-const fetchFromAPI = async (index: number, atSlot: number): Promise<IValidator | null> => {
-  const options = {
-    protocol: process.env.CL_PROTOCOL,
-    hostname: process.env.CL_HOSTNAME,
-    port: process.env.CL_PORT,
-    path: `/eth/v1/beacon/states/${atSlot}/validators/${index}`,
-    method: 'GET',
-    headers: {
-      'accept': 'application/json',
-    },
-    agent: false,
-  };
-
-  const httphttps = {
-    request: (
-      options: http.RequestOptions,
-      callback?: ((res: http.IncomingMessage) => void) | undefined): http.ClientRequest => {
-      if (options.protocol === "https:") {
-        return https.request(options, callback);
-      } else {
-        return http.request(options, callback)
-      }
-    }
-  }
-
-  return new Promise<IValidator | null>((resolve, reject) => {
-    const request = httphttps.request(options, response => {
-      response.setEncoding('utf8');
-
-      if (response.statusCode) {
-        if (response.statusCode === 404) {
-          console.log(`Validator ${index} at slot ${atSlot} not found.`);
-          return resolve(null);
-        } else if (response.statusCode < 200 || response.statusCode > 299) {
-          return reject(new Error(`Failed to fetch validator ${index} from CL at slot ${atSlot}, status code: ${response.statusCode}`));
-        }
-      }
-
-      let data = '';
-
-      response.on('data', (chunk) => {
-        data += chunk;
-      });
-
-      response.on('end', () => {
-        const jsonData = JSON.parse(data);
-        resolve({
-          index: jsonData.data.index,
-          publicKey: jsonData.data.validator.pubkey,
-          activationEpoch: jsonData.data.validator.activation_epoch === "18446744073709551615" ? 0 : jsonData.data.validator.activation_epoch,
-          exitEpoch: jsonData.data.validator.exit_epoch === "18446744073709551615" ? null : jsonData.data.validator.exit_epoch,
-          atSlot: atSlot,
-        });
-      });
-    });
-
-    request.on('error', (error) => {
-      console.error(error);
-      reject();
-    });
-
-    request.end();
-  });
 }
 
 const getMaxValidatorIndex = async (client: Client): Promise<number | null> => {
@@ -141,7 +97,39 @@ const getMaxValidatorIndex = async (client: Client): Promise<number | null> => {
   }
 }
 
+
+const isValidatorKnownAtBlock = async (validatorIndex: number, slotNumber: number): Promise<boolean> => {
+  return !!(await getValidatorAtSlot(validatorIndex, slotNumber));
+}
+
+const findFirsBlockForValidator = async (validatorIndex: number, startingSlotNumber: number): Promise<number | null> => {
+  // Start with the modified exponential search
+  let lowerBound = startingSlotNumber;
+  let upperBound = startingSlotNumber + 1;
+
+  while (!isValidatorKnownAtBlock(validatorIndex, upperBound)) {
+    lowerBound = upperBound;
+    upperBound = upperBound * 2;
+  }
+
+  // Now, do a binary search between lowerBound and upperBound
+  while (lowerBound <= upperBound) {
+    const mid = Math.floor((lowerBound + upperBound) / 2);
+
+    if (await isValidatorKnownAtBlock(validatorIndex, mid)) {
+      upperBound = mid - 1;
+    } else {
+      lowerBound = mid + 1;
+    }
+  }
+
+  return lowerBound;
+}
+
+
+
 export default {
   createValidator,
   getMaxValidatorIndex,
+  findFirsBlockForValidator,
 };

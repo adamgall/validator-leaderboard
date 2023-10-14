@@ -1,6 +1,5 @@
 import { Client } from 'pg';
-import http from 'http';
-import https from 'https';
+import { getFromAPI } from "./cl-api";
 
 interface IBlock {
   slot: number;
@@ -26,7 +25,7 @@ const createBlock = async (client: Client, slot: number): Promise<IBlock> => {
   if (dbBlock) {
     return hydrateBlock(dbBlock);
   } else {
-    let block = await fetchFromAPI(slot);
+    let block = await getBlockAtSlot(slot);
 
     if (!block) {
       throw new Error(`Failure trying to get block ${slot}`)
@@ -63,71 +62,24 @@ const saveToDatabase = async (client: Client, block: IBlock): Promise<void> => {
   }
 }
 
-const fetchFromAPI = async (slotNumber: number): Promise<IBlock | null> => {
-  const options = {
-    protocol: process.env.CL_PROTOCOL,
-    hostname: process.env.CL_HOSTNAME,
-    port: process.env.CL_PORT,
-    path: `/eth/v2/beacon/blocks/${slotNumber}`,
-    method: 'GET',
-    headers: {
-      'accept': 'application/json',
-    },
-    agent: false,
-  };
-
-  const httphttps = {
-    request: (
-      options: http.RequestOptions,
-      callback?: ((res: http.IncomingMessage) => void) | undefined): http.ClientRequest => {
-      if (options.protocol === "https:") {
-        return https.request(options, callback);
-      } else {
-        return http.request(options, callback)
-      }
-    }
+const jsonDataMapper = (atSlot: number) => (jsonData: any): IBlock | null => {
+  if (jsonData === null) {
+    return null;
   }
 
-  return new Promise<IBlock | null>((resolve, reject) => {
-    const request = httphttps.request(options, response => {
-      response.setEncoding('utf8');
+  const validator: IBlock = {
+    slot: jsonData.data.message.slot,
+    proposerIndex: jsonData.data.message.proposer_index,
+    timestamp: slotToTimestamp(atSlot)
+  }
 
-      if (response.statusCode) {
-        if (response.statusCode === 404) {
-          console.log(`Block ${slotNumber} missed`);
-          return resolve({
-            slot: slotNumber,
-            proposerIndex: 0,
-            timestamp: slotToTimestamp(slotNumber),
-          });
-        } else if (response.statusCode < 200 || response.statusCode > 299) {
-          return reject(new Error(`Failed to fetch block ${slotNumber} from CL, status code: ${response.statusCode}`));
-        }
-      }
+  return validator;
+}
 
-      let data = '';
-
-      response.on('data', (chunk) => {
-        data += chunk;
-      });
-
-      response.on('end', () => {
-        const jsonData = JSON.parse(data);
-        resolve({
-          slot: jsonData.data.message.slot,
-          proposerIndex: jsonData.data.message.proposer_index,
-          timestamp: slotToTimestamp(slotNumber)
-        });
-      });
-    });
-
-    request.on('error', (error) => {
-      console.error(error);
-      reject();
-    });
-
-    request.end();
-  });
+const getBlockAtSlot = async (atSlot: number): Promise<IBlock | null> => {
+  const path = `/eth/v2/beacon/blocks/${atSlot}`
+  const [validator] = await getFromAPI<IBlock>(path, jsonDataMapper(atSlot));
+  return validator;
 }
 
 const getMaxSlotNumber = async (client: Client): Promise<number | null> => {
